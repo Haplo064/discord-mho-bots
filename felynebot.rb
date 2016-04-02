@@ -10,7 +10,7 @@ require 'time'
 puts 'DONE!'
 print 'loading login...'
 
-bot = Discordrb::Commands::CommandBot.new('XX', 'XX', '', advanced_functionality: false)
+bot = Discordrb::Commands::CommandBot.new('felynebot@gmail.com', 'felynesareawesome', '', advanced_functionality: false)
 
 bot.debug = false
 
