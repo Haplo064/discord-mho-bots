@@ -169,7 +169,7 @@ bot.command(:server) do |event|
 end
 
 #-------------COMMAND ARMOR-------------
-bot.command(:armir) do |event|
+bot.command(:armor) do |event|
   cmdcount += 1
   event << 'http://monsterhunteronline.in/armor/'
   event << 'Feel free to check our <#126578658423865344> for more info'
