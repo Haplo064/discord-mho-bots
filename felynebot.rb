@@ -154,8 +154,12 @@ end
 bot.command(:monster) do |event, mname|
   cmdcount += 1
   output = monsterarray.select { |s| s.include? mname.to_s }
+if output
   output.each do |o|
      event << "http://monsterhunteronline.in/monsters/#{o}"
+  end
+  else
+	  event << "no monsters found"
   end
   puts 'CMD: FAQ MONSTER SEARCH'
 end
