@@ -17,6 +17,7 @@ bot.debug = false
 puts 'DONE!'
 print 'loading cmds...'
 
+#-------------GLOBAL VARIABLES-------------
 cmdcount = 0
 time = 0
 time1 = 0
@@ -31,13 +32,13 @@ name4s = ''
 name5s = ''
 monsterarray = ['http://monsterhunteronline.in/monsters/akura-vashimu', 'http://monsterhunteronline.in/monsters/baelidae', 'http://monsterhunteronline.in/monsters/basarios', 'http://monsterhunteronline.in/monsters/blue-yian-kut-ku', 'http://monsterhunteronline.in/monsters/bulldrome', 'http://monsterhunteronline.in/monsters/caeserber', 'http://monsterhunteronline.in/monsters/cephadrome', 'http://monsterhunteronline.in/monsters/chramine', 'http://monsterhunteronline.in/monsters/conflagration-rathian', 'http://monsterhunteronline.in/monsters/congalala', 'http://monsterhunteronline.in/monsters/crystal-basarios', 'http://monsterhunteronline.in/monsters/daimyo-hermitaur', 'http://monsterhunteronline.in/monsters/doom-estrellian', 'http://monsterhunteronline.in/monsters/dread-baelidae', 'http://monsterhunteronline.in/monsters/estrellian', 'http://monsterhunteronline.in/monsters/gendrome', 'http://monsterhunteronline.in/monsters/ghost-caeserber', 'http://monsterhunteronline.in/monsters/giadrome', 'http://monsterhunteronline.in/monsters/gold-congalala', 'http://monsterhunteronline.in/monsters/gypceros', 'http://monsterhunteronline.in/monsters/hypnocatrice', 'http://monsterhunteronline.in/monsters/ice-chramine', 'http://monsterhunteronline.in/monsters/iodrome', 'http://monsterhunteronline.in/monsters/khezu', 'http://monsterhunteronline.in/monsters/monoblos', 'http://monsterhunteronline.in/monsters/one-eared-yian-garuga', 'http://monsterhunteronline.in/monsters/purple-gypceros', 'http://monsterhunteronline.in/monsters/rathalos', 'http://monsterhunteronline.in/monsters/rathian', 'http://monsterhunteronline.in/monsters/red-khezu', 'http://monsterhunteronline.in/monsters/red-shen-gaoren', 'http://monsterhunteronline.in/monsters/rock-shen-gaoren', 'http://monsterhunteronline.in/monsters/shattered-monoblos', 'http://monsterhunteronline.in/monsters/shen-gaoren', 'http://monsterhunteronline.in/monsters/shogun-ceanataur', 'http://monsterhunteronline.in/monsters/silver-hypnocatrice', 'http://monsterhunteronline.in/monsters/swordmaster-shogun-ceanataur', 'http://monsterhunteronline.in/monsters/tartaronis', 'http://monsterhunteronline.in/monsters/tigrex', 'http://monsterhunteronline.in/monsters/velocidrome', 'http://monsterhunteronline.in/monsters/yellow-caeserber', 'http://monsterhunteronline.in/monsters/yian-garuga', 'http://monsterhunteronline.in/monsters/yian-kut-ku']
 
-bot.set_user_permission(64_438_454_750_031_872, 999)
-bot.set_user_permission(126_881_441_148_698_624, 1)
-bot.set_user_permission(479_346_704_064_225_28, 1)
-bot.set_user_permission(829_807_783_627_980_80, 1)
-bot.set_user_permission(116_461_732_389_584_901, 1)
-bot.set_user_permission(124_199_384_299_732_992, 1)
-bot.set_user_permission(150_278_590_494_277_632, 1)
+#-------------PERMISSIONS-------------
+bot.set_user_permission(64_438_454_750_031_872, 999) #ZER0
+bot.set_user_permission(126_881_441_148_698_624, 1) #Asakura
+bot.set_user_permission(116_461_732_389_584_901, 1) #shoryouken
+bot.set_user_permission(124_199_384_299_732_992, 1) #dualblitz
+bot.set_user_permission(150_278_590_494_277_632, 1) #reaver01
+bot.set_user_permission(128_333_950_975_213_568, 1) #pibbish
 
 #-------------COMMAND TRANS-------------
 bot.command(:translation) do |event, _link|
