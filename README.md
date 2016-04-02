@@ -1,7 +1,5 @@
 # MHO Discord bots
 
-# Command Usage
-
 ##### commands
 - `raid` shows current raids with time left
 - `maintenance`, maint shows time left until the next maintenance (if set up by mods)
