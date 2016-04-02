@@ -156,7 +156,7 @@ bot.command(:monster) do |event, mname|
   output = monsterarray.select { |s| s.include? mname.to_s }
   monstertext = ''
   output.each do |o|
-     monstertext << "#{i}\n"
+     monstertext << "#{o}\n"
   end
   event << monstertext
   puts 'CMD: FAQ MONSTER SEARCH'
