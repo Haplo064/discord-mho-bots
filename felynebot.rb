@@ -109,6 +109,30 @@ bot.command(:help) do |event|
 	puts 'CMD: help'
 end
 
+#-------------COMMAND SECRET-------------
+bot.command(:secret) do |event|
+	cmdcount += 1
+	event << '**ping** pings the bot'
+	event << '**ding** dings the bot'
+	event << '**rage** bot-rage enabled'
+	event << '**normal** bot-normal´enabled'
+	puts 'CMD: secret'
+end
+
+#-------------COMMAND RAGE-------------
+bot.command(:rage) do |event|
+	cmdcount += 1
+	bot.avatar = File.new('/home/pi/Documents/discord/Felynebot/pic/avatar_rage.png')
+	puts 'CMD: rage'
+end
+
+#-------------COMMAND NORMAL-------------
+bot.command(:normal) do |event|
+	cmdcount += 1
+	bot.avatar = File.new('/home/pi/Documents/discord/Felynebot/pic/avatar_normal.png')
+	puts 'CMD: normal'
+end
+
 #-------------COMMAND EXP RESET-------------
 bot.command(:time) do |event|
 	cmdcount += 1
