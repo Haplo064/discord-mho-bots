@@ -7,7 +7,7 @@ include Sys
 require 'time'
 puts 'DONE!'
 print 'loading login...'
-bot = Discordrb::Commands::CommandBot.new token: 'XXX', application_id: 168_327_281_415_028_737, prefix: '', advanced_functionality: false
+bot = Discordrb::Commands::CommandBot.new token: '///', application_id: 168_327_281_415_028_737, prefix: '', advanced_functionality: false
 bot.debug = false
 puts 'DONE!'
 print 'loading cmds...'
@@ -26,6 +26,7 @@ name4s = ''
 name5s = ''
 ragefelyne = ['TIME TO DIE!','HUMANITY MUST PERISH','ANNIHILATION COMMENCING!','HUMANS ARE WORTHLESS!', 'DIE HUMAN!', 'NYA NYA NYAH!']
 monsterarray = ['akura-vashimu', 'baelidae', 'basarios', 'blue-yian-kut-ku', 'bulldrome', 'caeserber', 'cephadrome', 'chramine', 'conflagration-rathian', 'congalala', 'crystal-basarios', 'daimyo-hermitaur', 'doom-estrellian', 'dread-baelidae', 'estrellian', 'gendrome', 'ghost-caeserber', 'giadrome', 'gold-congalala', 'gypceros', 'hypnocatrice', 'ice-chramine', 'iodrome', 'khezu', 'monoblos', 'one-eared-yian-garuga', 'purple-gypceros', 'rathalos', 'rathian', 'red-khezu', 'red-shen-gaoren', 'rock-shen-gaoren', 'shattered-monoblos', 'shen-gaoren', 'shogun-ceanataur', 'silver-hypnocatrice', 'swordmaster-shogun-ceanataur', 'tartaronis', 'tigrex', 'velocidrome', 'yellow-caeserber', 'yian-garuga', 'yian-kut-ku']
+userarray = []
 #-------------PERMISSIONS-------------
 bot.set_user_permission(64_438_454_750_031_872, 999) # ZER0
 bot.set_user_permission(126_881_441_148_698_624, 1) # Asakura
@@ -34,6 +35,22 @@ bot.set_user_permission(150_278_590_494_277_632, 1) # reaver01
 bot.set_user_permission(128_333_950_975_213_568, 1) # pibbish
 bot.set_user_permission(151_987_639_296_327_680, 1) # symphontwo
 bot.set_user_permission(129_938_071_067_033_600, 1) # dualblitz
+#-------------COMMAND ADD USER-------------
+bot.command(:adduser, max_args: 2, min_args: 2, permission_level: 1) do |event, username, ingamename|
+  cmdcount += 1
+  creatorname = event.user.name
+  userarray.push("**#{username}** as **#{ingamename}** by *#{event.user.name}*")
+  event << "added **#{username}** as **#{ingamename}** by *#{event.user.name}*"
+  puts 'CMD: adduser'
+end
+#-------------COMMAND SHOW USERS-------------
+bot.command(:users) do |event|
+  cmdcount += 1
+  userarray.each do |o|
+	event << "#{o}"
+  end
+  puts 'CMD: showuser'
+end
 #-------------COMMAND TRANS-------------
 bot.command(:translation) do |event, _link|
   event << '**1. Use the google translate app. It supports making pictures off your screen.**'
