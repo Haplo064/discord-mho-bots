@@ -1,3 +1,6 @@
+#TODO add permission setting/removing/adding
+#Rage mode addendum
+
 puts 'starting felynebot'
 print 'loading require...'
 require 'json'
@@ -9,23 +12,24 @@ require 'time'
 puts 'DONE!'
 puts 'loading login...'
 
+#Simple prompt for input
 def prompt(*args)
     print(*args)
     gets
 end
 
-#Open file here for token/id
+#Open file for token/Get Token
 if File.exist?("bot/token")
 	puts 'Opened file'
 	f = File.open("bot/token","r")
-	$token = f.read
+	token = f.read
 	f.close
 else
 	puts 'No file found for the Token String! Please input your token.'
-	$token = prompt "Token: "
+	token = prompt "Token: "
 
-	$q= prompt "Store this for next time? y/n: "
-	if $q[0] == "y"
+	q= prompt "Store this for next time? y/n: "
+	if q[0] == "y"
 		if File.exist?("bot/token")
 				puts 'Opened file'
 				f = File.open("bot/token","w")
@@ -33,27 +37,26 @@ else
 				puts 'Creating new file'
 				f = File.new("bot/token","w")
 		end
-		f.write($token)
+		f.write(token)
 		f.close
 		puts 'Saved Token'
 	end
 end
 
-#puts $token
-
 puts '------->Token Loaded!'
 
+#Open file for ID/Get ID
 if File.exist?("bot/id")
 	puts 'Opened file'
 	f = File.open("bot/id","r")
-	$id = f.read
+	id = f.read
 	f.close
 else
 	puts 'No file found for the ID String! Please input the ID.'
-	$id = prompt "Client/Application ID: "
+	id = prompt "Client/Application ID: "
 
-	$q= prompt "Store this for next time? y/n: "
-	if $q[0] == "y"
+	q= prompt "Store this for next time? y/n: "
+	if q[0] == "y"
 		if File.exist?("bot/id")
 				puts 'Opened file'
 				f = File.open("bot/id","w")
@@ -61,19 +64,20 @@ else
 				puts 'Creating new file'
 				f = File.new("bot/id","w")
 		end
-		f.write($id)
+		f.write(id)
 		f.close
 		puts 'Saved ID'
 	end
 end
-#puts $id
 
 puts '------->ID Loaded!'
 
-bot = Discordrb::Commands::CommandBot.new token: $token, application_id: $id, prefix: '/', advanced_functionality: false
+#Create the bot object
+bot = Discordrb::Commands::CommandBot.new token: token, application_id: id, prefix: '/', advanced_functionality: false
 bot.debug = false
 puts 'DONE!'
 puts 'loading cmds...'
+
 #-------------GLOBAL VARIABLES-------------
 cmdcount = 0
 time = 0
@@ -89,10 +93,39 @@ name4s = ''
 name5s = ''
 ragefelyne = ['TIME TO DIE!','HUMANITY MUST PERISH','ANNIHILATION COMMENCING!','HUMANS ARE WORTHLESS!', 'DIE HUMAN!', 'NYA NYA NYAH!', 'FEED ME!']
 monsterarray = ['akura-vashimu', 'baelidae', 'basarios', 'blue-yian-kut-ku', 'bulldrome', 'caeserber', 'cephadrome', 'chramine', 'conflagration-rathian', 'congalala', 'crystal-basarios', 'daimyo-hermitaur', 'doom-estrellian', 'dread-baelidae', 'estrellian', 'gendrome', 'ghost-caeserber', 'giadrome', 'gold-congalala', 'gypceros', 'hypnocatrice', 'ice-chramine', 'iodrome', 'khezu', 'monoblos', 'one-eared-yian-garuga', 'purple-gypceros', 'rathalos', 'rathian', 'red-khezu', 'red-shen-gaoren', 'rock-shen-gaoren', 'shattered-monoblos', 'shen-gaoren', 'shogun-ceanataur', 'silver-hypnocatrice', 'swordmaster-shogun-ceanataur', 'tartaronis', 'tigrex', 'velocidrome', 'yellow-caeserber', 'yian-garuga', 'yian-kut-ku']
-
-
 userarray = []
+
+#Method for saving arrays
+def save(ar,loc)
+	if File.exist?(loc)
+		puts 'Opened file'
+		f = File.open(loc,"w")
+	else
+		puts 'Creating new file'
+		f = File.new(loc,"w")
+	end
+	f.write(ar.to_json)
+	f.close
+	puts "Saved File!"
+end
+
+#Method for loading arrays
+def load(ar,loc)
+	if File.exist?(loc)
+		puts 'Opened file'
+		f = File.open(loc,"r")
+	else
+		puts 'No file!'
+	end
+	buff = f.read
+	ar=JSON.parse(buff)
+	puts 'Loaded array!'
+	return ar
+end
+
+#Loading/creating the Userdatabase
 puts 'Loading User database'
+
 if File.exist?("userbase/users")
 	f = File.open("userbase/users","r")
 	puts 'Opened file'
@@ -106,16 +139,22 @@ else
 	puts 'Database created!'
 end
 
-
 #-------------PERMISSIONS-------------
-bot.set_user_permission(64_438_454_750_031_872, 999) # ZER0
-bot.set_user_permission(126_881_441_148_698_624, 1) # Asakura
-bot.set_user_permission(116_461_732_389_584_901, 1) # shoryouken
-bot.set_user_permission(150_278_590_494_277_632, 1) # reaver01
-bot.set_user_permission(128_333_950_975_213_568, 1) # pibbish
-bot.set_user_permission(151_987_639_296_327_680, 1) # symphontwo
+puts 'Permarray Creation'
+permarray=[]
+permarray = load(permarray,"userbase/perm")
+
+pos=0
+begin
+	bot.set_user_permission(permarray[pos],permarray[pos+1])
+	puts "Added #{permarray[pos+2]} as level #{permarray[pos+1]} user"
+	pos+=3
+
+end while pos < permarray.length
 bot.set_user_permission(129_938_071_067_033_600, 1) # dualblitz
-bot.set_user_permission(107_090_132_506_550_272, 999) # Alice
+
+
+
 #-------------COMMAND ROLEPLAY-------------
 bot.command(:rp, permission_level: 1) do |event, *phrase|
 	cmdcount += 1
@@ -127,146 +166,152 @@ end
 #-------------COMMAND ADD USER-------------
 bot.command(:adduser, max_args: 1, min_args: 1) do |event, ingamename|
 	cmdcount += 1
-	$i=0
-	$found=0
-	$loc=0
+	i=0
+	found=0
+	loc=0
 
 	begin
-		if userarray[$i].include?("**#{event.user.name}** IGN:")
-			$found=1
-			$loc=$i
+		if userarray[i].include?("**#{event.user.name}** IGN:")
+			found=1
+			loc=i
 		end
-		$i+=1
-	end while $i < userarray.length
+		i+=1
+	end while i < userarray.length
 
-	if $found==1
+	if found==1
 		event << "Already in the userbase! Use !changeign to edit your IGN"
 	else
 		userarray.push("**#{event.user.name}** IGN: **#{ingamename}**")
 		event << "added **#{event.user.name}** IGN: **#{ingamename}**"
 	end
 	puts 'CMD: adduser'
+	save(userarray, "userbase/users")
+end
+
+bot.command(:id, max_args: 0, min_args: 0) do |event|
+	event << event.user.id
 end
 
 #-------------FORCE COMMAND ADD USER-------------
 bot.command(:fadduser, max_args: 2, min_args: 2, permission_level: 1) do |event, ingamename, username|
-#Forces the database to add a new user. Only use if needed!
+	#Forces the database to add a new user. Only use if needed!
 	cmdcount += 1
 	userarray.push("**#{username}** IGN: **#{ingamename}**")
 	event << "added **#{username}** IGN: **#{ingamename}**"
 	puts 'CMD: forceadduser'
+	save(userarray, "userbase/users")
 end
 
 #-------------COMMAND FIND USER-------------
 bot.command(:find, max_args: 1, min_args: 0) do |event, username=nil|
 	cmdcount += 1
-	$i=0
-	$found=0
-	$loc=0
+	i=0
+	found=0
+	loc=0
 	event << "Results:"
 	if username!=nil
-	$i=0
-	$found=0
-	$loc=0
+	i=0
+	found=0
+	loc=0
 		begin
-			if userarray[$i].include?("IGN: **#{username}**")
-				$found=1
-				$loc=$i
-				event << userarray[$loc]
+			if userarray[i].include?("IGN: **#{username}**")
+				found=1
+				loc=i
+				event << userarray[loc]
 			end
-			$i+=1
-		end while $i < userarray.length
+			i+=1
+		end while i < userarray.length
 
-	$i=0
-	$loc=0
+	i=0
+	loc=0
 		begin
-			if userarray[$i].include?("**#{username}** IGN:")
-				$found=1
-				$loc=$i
-				event << userarray[$loc]
+			if userarray[i].include?("**#{username}** IGN:")
+				found=1
+				loc=i
+				event << userarray[loc]
 			end
-			$i+=1
-		end while $i < userarray.length
+			i+=1
+		end while i < userarray.length
 
 
 	else
-	$i=0
-	$loc=0
+	i=0
+	loc=0
 		begin
-			if userarray[$i].include?("**#{event.user.name}** IGN:")
-				$found=1
-				$loc=$i
-				event << userarray[$loc]
+			if userarray[i].include?("**#{event.user.name}** IGN:")
+				found=1
+				loc=i
+				event << userarray[loc]
 			end
-			$i+=1
-		end while $i < userarray.length
+			i+=1
+		end while i < userarray.length
 
 	end
-	if $found==0
+	if found==0
 		event << "Could not find that user!"
 	end
 end
 
 #-------------COMMAND CHANGE IGN-------------
 bot.command(:changeign, max_args: 1, min_args: 1) do |event, ingamename=nil|
-#This will kinda screw up if multiple igns have the same username. Hence why the force add username is restricted.
-	$i=0
-	$loc=0
+	#This will kinda screw up if multiple igns have the same username. Hence why the force add username is restricted.
+	i=0
+	loc=0
 		begin
-			if userarray[$i].include?("**#{event.user.name}** IGN:")
-				$loc=$i
-				event << userarray[$loc]
+			if userarray[i].include?("**#{event.user.name}** IGN:")
+				loc=i
+				event << userarray[loc]
 				event << 'Changed to:'
-				userarray[$i]="**#{event.user.name}** IGN: **#{ingamename}**"
-				event << userarray[$loc]
+				userarray[i]="**#{event.user.name}** IGN: **#{ingamename}**"
+				event << userarray[loc]
 				break
 			end
-			$i+=1
-		end while $i < userarray.length
-
+			i+=1
+		end while i < userarray.length
+		save(userarray, "userbase/users")
 end
 
 #-------------COMMAND FORCE REMOVE USERS-------------
 bot.command(:fremoveuser, max_args: 1, min_args: 1, permission_level: 1) do |event, ign|
-	$i=0
-	$loc=0
+	i=0
+	loc=0
 		begin
-			if userarray[$i].include?("**#{ign}** IGN:")
-				$loc=$i
-				event << "Found #{userarray[$i]}"
-				front = userarray[0,$i]
+			if userarray[i].include?("**#{ign}** IGN:")
+				loc=i
+				event << "Found #{userarray[i]}"
+				front = userarray[0,i]
 				#p front
-				back=userarray.drop($i+1)
+				back=userarray.drop(i+1)
 				#p back
 				userarray=front.push(*back)
 				event << "Forced #{ign} from the list."
 				break
 			end
-			$i+=1
-		end while $i < userarray.length
-
-end
+			i+=1
+		end while i < userarray.length
+		save(userarray, "userbase/users")
+	end
 
 #-------------COMMAND REMOVE USERS-------------
 bot.command(:removeuser, max_args: 0, min_args: 0) do |event|
-	$i=0
-	$loc=0
+	i=0
+	loc=0
 		begin
-			if userarray[$i].include?("**#{event.user.name}** IGN:")
-				$loc=$i
-				event << "Found #{userarray[$i]}"
-				front = userarray[0,$i]
+			if userarray[i].include?("**#{event.user.name}** IGN:")
+				loc=i
+				event << "Found #{userarray[i]}"
+				front = userarray[0,i]
 				#p front
-				back=userarray.drop($i+1)
+				back=userarray.drop(i+1)
 				#p back
 				userarray=front.push(*back)
 				event << "Removed"
 				break
 			end
-			$i+=1
-		end while $i < userarray.length
-
-end
+			i+=1
+		end while i < userarray.length
+		save(userarray, "userbase/users")
+	end
 
 #-------------COMMAND SHOW USERS-------------
 bot.command(:users) do |event, *uname|
