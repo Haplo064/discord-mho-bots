@@ -1,5 +1,6 @@
 puts 'starting felynebot'
 print 'loading require...'
+require 'json'
 require 'discordrb'
 require 'rubygems'
 require 'sys/uptime'
@@ -7,7 +8,7 @@ include Sys
 require 'time'
 puts 'DONE!'
 print 'loading login...'
-bot = Discordrb::Commands::CommandBot.new token: '///', application_id: 168_327_281_415_028_737, prefix: '', advanced_functionality: false
+bot = Discordrb::Commands::CommandBot.new token: '\\\\', application_id: '\\', prefix: '/', advanced_functionality: false
 bot.debug = false
 puts 'DONE!'
 print 'loading cmds...'
@@ -27,6 +28,7 @@ name5s = ''
 ragefelyne = ['TIME TO DIE!','HUMANITY MUST PERISH','ANNIHILATION COMMENCING!','HUMANS ARE WORTHLESS!', 'DIE HUMAN!', 'NYA NYA NYAH!', 'FEED ME!']
 monsterarray = ['akura-vashimu', 'baelidae', 'basarios', 'blue-yian-kut-ku', 'bulldrome', 'caeserber', 'cephadrome', 'chramine', 'conflagration-rathian', 'congalala', 'crystal-basarios', 'daimyo-hermitaur', 'doom-estrellian', 'dread-baelidae', 'estrellian', 'gendrome', 'ghost-caeserber', 'giadrome', 'gold-congalala', 'gypceros', 'hypnocatrice', 'ice-chramine', 'iodrome', 'khezu', 'monoblos', 'one-eared-yian-garuga', 'purple-gypceros', 'rathalos', 'rathian', 'red-khezu', 'red-shen-gaoren', 'rock-shen-gaoren', 'shattered-monoblos', 'shen-gaoren', 'shogun-ceanataur', 'silver-hypnocatrice', 'swordmaster-shogun-ceanataur', 'tartaronis', 'tigrex', 'velocidrome', 'yellow-caeserber', 'yian-garuga', 'yian-kut-ku']
 userarray = []
+userarray[0]="User Database"
 #-------------PERMISSIONS-------------
 bot.set_user_permission(64_438_454_750_031_872, 999) # ZER0
 bot.set_user_permission(126_881_441_148_698_624, 1) # Asakura
@@ -35,8 +37,9 @@ bot.set_user_permission(150_278_590_494_277_632, 1) # reaver01
 bot.set_user_permission(128_333_950_975_213_568, 1) # pibbish
 bot.set_user_permission(151_987_639_296_327_680, 1) # symphontwo
 bot.set_user_permission(129_938_071_067_033_600, 1) # dualblitz
+bot.set_user_permission(107_090_132_506_550_272, 1) # Alice
 #-------------COMMAND ROLEPLAY-------------
-bot.command(:rp) do |event, *phrase|
+bot.command(:rp, permission_level: 1) do |event, *phrase|
 	cmdcount += 1
 	phrase = phrase.join(' ')
 	event << "sent **#{phrase}** to mhodiscussion"
@@ -44,12 +47,149 @@ bot.command(:rp) do |event, *phrase|
 	puts 'CMD: roleplay'
 end
 #-------------COMMAND ADD USER-------------
-bot.command(:adduser, max_args: 2, min_args: 2, permission_level: 1) do |event, username, ingamename|
+bot.command(:adduser, max_args: 1, min_args: 1) do |event, ingamename|
 	cmdcount += 1
-	userarray.push("**#{username}** as **#{ingamename}** by *#{event.user.name}*")
-	event << "added **#{username}** as **#{ingamename}** by *#{event.user.name}*"
+	$i=0
+	$found=0
+	$loc=0
+	
+	begin
+		if userarray[$i].include?("**#{event.user.name}** IGN:")
+			$found=1
+			$loc=$i
+		end
+		$i+=1
+	end while $i < userarray.length
+	
+	if $found==1
+		event << "Already in the userbase! Use !changeign to edit your IGN"
+	else
+		userarray.push("**#{event.user.name}** IGN: **#{ingamename}**")
+		event << "added **#{event.user.name}** IGN: **#{ingamename}**"
+	end
 	puts 'CMD: adduser'
 end
+
+#-------------FORCE COMMAND ADD USER-------------
+bot.command(:fadduser, max_args: 2, min_args: 2, permission_level: 1) do |event, ingamename, username|
+#Forces the database to add a new user. Only use if needed!
+	cmdcount += 1
+	userarray.push("**#{username}** IGN: **#{ingamename}**")
+	event << "added **#{username}** IGN: **#{ingamename}**"
+	puts 'CMD: forceadduser'
+end
+
+#-------------COMMAND FIND USER-------------
+bot.command(:find, max_args: 1, min_args: 0) do |event, username=nil|
+	cmdcount += 1
+	$i=0
+	$found=0
+	$loc=0
+	event << "Results:"
+	if username!=nil
+	$i=0
+	$found=0
+	$loc=0
+		begin
+			if userarray[$i].include?("IGN: **#{username}**")
+				$found=1
+				$loc=$i
+				event << userarray[$loc]
+			end
+			$i+=1
+		end while $i < userarray.length
+
+	$i=0
+	$loc=0
+		begin
+			if userarray[$i].include?("**#{username}** IGN:")
+				$found=1
+				$loc=$i
+				event << userarray[$loc]
+			end
+			$i+=1
+		end while $i < userarray.length
+
+		
+	else
+	$i=0
+	$loc=0
+		begin
+			if userarray[$i].include?("**#{event.user.name}** IGN:")
+				$found=1
+				$loc=$i
+				event << userarray[$loc]
+			end
+			$i+=1
+		end while $i < userarray.length
+
+	end
+	if $found==0
+		event << "Could not find that user!"
+	end
+end
+
+#-------------COMMAND CHANGE IGN-------------
+bot.command(:changeign, max_args: 1, min_args: 1) do |event, ingamename=nil|
+#This will kinda screw up if multiple igns have the same username. Hence why the force add username is restricted.
+	$i=0
+	$loc=0
+		begin
+			if userarray[$i].include?("**#{event.user.name}** IGN:")
+				$loc=$i
+				event << userarray[$loc]
+				event << 'Changed to:'
+				userarray[$i]="**#{event.user.name}** IGN: **#{ingamename}**"
+				event << userarray[$loc]
+				break
+			end
+			$i+=1
+		end while $i < userarray.length	
+
+end
+
+#-------------COMMAND FORCE REMOVE USERS-------------
+bot.command(:fremoveuser, max_args: 1, min_args: 1, permission_level: 1) do |event, ign|
+	$i=0
+	$loc=0
+		begin
+			if userarray[$i].include?("**#{ign}** IGN:")
+				$loc=$i
+				event << "Found #{userarray[$i]}"
+				front = userarray[0,$i]
+				#p front
+				back=userarray.drop($i+1)
+				#p back
+				userarray=front.push(*back)
+				event << "Forced #{ign} from the list."
+				break
+			end
+			$i+=1
+		end while $i < userarray.length	
+
+end
+
+#-------------COMMAND REMOVE USERS-------------
+bot.command(:removeuser, max_args: 0, min_args: 0) do |event|
+	$i=0
+	$loc=0
+		begin
+			if userarray[$i].include?("**#{event.user.name}** IGN:")
+				$loc=$i
+				event << "Found #{userarray[$i]}"
+				front = userarray[0,$i]
+				#p front
+				back=userarray.drop($i+1)
+				#p back
+				userarray=front.push(*back)
+				event << "Removed"
+				break
+			end
+			$i+=1
+		end while $i < userarray.length	
+
+end
+
 #-------------COMMAND SHOW USERS-------------
 bot.command(:users) do |event, *uname|
 	cmdcount += 1
@@ -70,6 +210,33 @@ bot.command(:users) do |event, *uname|
 	end
 	puts 'CMD: show/search user'
 end
+
+#-------------LOAD ARRAY FROM FILE------------
+bot.command(:load) do |event|
+	if File.exist?("userbase/users.txt")
+		puts 'Opened file'
+		f = File.open("userbase/users.txt","r")
+	else
+		puts 'No file!'
+	end
+	buff = f.read
+	userarray=JSON.parse(buff)
+	puts 'Loaded user database'
+end
+
+#-------------WRITE ARRAY TO FILE------------
+bot.command(:save) do |event|
+	if File.exist?("userbase/users.txt")
+		puts 'Opened file'
+		f = File.open("userbase/users.txt","w")
+	else
+		puts 'Creating new file'
+		f = File.new("userbase/users.txt","w")
+	end
+	f.write(userarray.to_json)
+	f.close
+	puts 'Saved user database'
+end
 #-------------COMMAND TRANS-------------
 bot.command(:translation) do |event, _link|
 	event << '**1. Use the google translate app. It supports making pictures off your screen.**'
@@ -89,18 +256,21 @@ bot.command(:translation) do |event, _link|
 	event << ''
 	event << 'Feel free to check our <#126578658423865344> for more info'
 end
+
 #-------------COMMAND PING-------------
 bot.command(:ping) do |event|
 	cmdcount += 1
 	event.respond 'Pong!'
 	puts 'CMD: ping'
 end # ends function
+
 #-------------COMMAND PING-------------
 bot.command(:ding) do |event|
 	cmdcount += 1
 	event.respond 'Dong!'
 	puts 'CMD: ding'
 end
+
 #-------------COMMAND HELP-------------
 bot.command(:help) do |event|
 	cmdcount += 1
@@ -135,6 +305,7 @@ bot.command(:help) do |event|
 	event << '**users <serchkeyword>** list all users or search for specific users'
 	puts 'CMD: help'
 end
+
 #-------------COMMAND SECRET-------------
 bot.command(:secret) do |event|
 	cmdcount += 1
@@ -144,6 +315,8 @@ bot.command(:secret) do |event|
 	event << '**normal** bot-normal´enabled'
 	puts 'CMD: secret'
 end
+
+#Note to self: Enable rage tiers.
 #-------------COMMAND RAGE-------------
 bot.command(:rage) do |event|
 	cmdcount += 1
@@ -151,6 +324,7 @@ bot.command(:rage) do |event|
 	event.respond ragefelyne[rand(0..ragefelyne.length)]
 	puts 'CMD: rage'
 end
+
 #-------------COMMAND NORMAL-------------
 bot.command(:normal) do |event|
 	cmdcount += 1
@@ -158,6 +332,7 @@ bot.command(:normal) do |event|
 	event << '**BACK TO NORMAL!**'
 	puts 'CMD: normal'
 end
+
 #-------------COMMAND EXP RESET-------------
 bot.command(:time) do |event|
 	cmdcount += 1
@@ -175,6 +350,7 @@ bot.command(:time) do |event|
 	end
 	puts 'CMD: exp reset'
 end
+
 #-------------COMMAND EXP RESET-------------
 bot.command(:reset) do |event|
 	cmdcount += 1
@@ -192,19 +368,26 @@ bot.command(:reset) do |event|
 	end
 	puts 'CMD: exp reset'
 end
+
 #-------------COMMAND MONSTER SEARCH-------------
 bot.command(:monster) do |event, mname|
-	cmdcount += 1
-	output = monsterarray.select { |s| s.include? mname.to_s }
-	if output == []
-		event << 'no monsters found'
-	else
-		output.each do |o|
-			event << "http://monsterhunteronline.in/monsters/#{o}"
+	
+	if mname.length>3
+		cmdcount += 1
+		output = monsterarray.select { |s| s.include? mname.to_s }
+		if output == []
+			event << 'No monsters found'
+		else
+			output.each do |o|
+				event << "http://monsterhunteronline.in/monsters/#{o}"
+			end
 		end
+		puts 'CMD: FAQ MONSTER SEARCH'
+	else
+		event << "Name not long enough."
 	end
-	puts 'CMD: FAQ MONSTER SEARCH'
 end
+
 #-------------COMMAND SERVER-------------
 bot.command(:server) do |event|
 	cmdcount += 1
@@ -212,6 +395,7 @@ bot.command(:server) do |event|
 	channel.send_file File.new('/home/pi/Documents/discord/Felynebot/pic/server.jpg')
 	puts 'CMD: FAQ SERVER'
 end
+
 #-------------COMMAND ARMOR-------------
 bot.command(:armor) do |event|
 	cmdcount += 1
@@ -219,6 +403,7 @@ bot.command(:armor) do |event|
 	event << 'Feel free to check our <#126578658423865344> for more info'
 	puts 'CMD: FAQ ARMOR'
 end
+
 #-------------COMMAND JEWELRY-------------
 bot.command(:jewelry) do |event|
 	cmdcount += 1
@@ -226,6 +411,7 @@ bot.command(:jewelry) do |event|
 	event << 'Feel free to check our <#126578658423865344> for more info'
 	puts 'CMD: FAQ JEWELRY'
 end
+
 #-------------COMMAND WEAPONS-------------
 bot.command(:weapons) do |event|
 	cmdcount += 1
@@ -233,6 +419,7 @@ bot.command(:weapons) do |event|
 	event << 'Feel free to check our <#126578658423865344> for more info'
 	puts 'CMD: FAQ WEAPONS'
 end
+
 #-------------COMMAND MONSTERS-------------
 bot.command(:monsters) do |event|
 	cmdcount += 1
@@ -240,6 +427,7 @@ bot.command(:monsters) do |event|
 	event << 'Feel free to check our <#126578658423865344> for more info'
 	puts 'CMD: FAQ MONSTERS'
 end
+
 #-------------COMMAND QUESTS-------------
 bot.command(:quests) do |event|
 	cmdcount += 1
@@ -247,6 +435,7 @@ bot.command(:quests) do |event|
 	event << 'Feel free to check our <#126578658423865344> for more info'
 	puts 'CMD: FAQ QUESTS'
 end
+
 #-------------COMMAND CATS-------------
 bot.command(:cats) do |event|
 	cmdcount += 1
@@ -254,6 +443,7 @@ bot.command(:cats) do |event|
 	event << 'Feel free to check our <#126578658423865344> for more info'
 	puts 'CMD: FAQ CATS'
 end
+
 #-------------COMMAND GATHERING-------------
 bot.command(:gathering) do |event|
 	cmdcount += 1
@@ -261,6 +451,7 @@ bot.command(:gathering) do |event|
 	event << 'Feel free to check our <#126578658423865344> for more info'
 	puts 'CMD: FAQ GATHERING'
 end
+
 #-------------COMMAND FOOD-------------
 bot.command(:food) do |event|
 	cmdcount += 1
@@ -268,6 +459,7 @@ bot.command(:food) do |event|
 	event << 'Feel free to check our <#126578658423865344> for more info'
 	puts 'CMD: FAQ FOOD'
 end
+
 #-------------COMMAND VIP-------------
 bot.command(:vip) do |event|
 	cmdcount += 1
@@ -275,6 +467,7 @@ bot.command(:vip) do |event|
 	event << 'Feel free to check our <#126578658423865344> for more info'
 	puts 'CMD: FAQ VIP'
 end
+
 #-------------COMMAND GROUPING-------------
 bot.command(:grouping) do |event|
 	cmdcount += 1
@@ -282,6 +475,7 @@ bot.command(:grouping) do |event|
 	event << 'Feel free to check our <#126578658423865344> for more info'
 	puts 'CMD: FAQ GROUPING'
 end
+
 #-------------COMMAND CRAFTING-------------
 bot.command(:crafting) do |event|
 	cmdcount += 1
@@ -289,6 +483,7 @@ bot.command(:crafting) do |event|
 	event << 'Feel free to check our <#126578658423865344> for more info'
 	puts 'CMD: FAQ CRAFTING'
 end
+
 #-------------COMMAND MATERIALS-------------
 bot.command(:materials) do |event|
 	cmdcount += 1
@@ -296,6 +491,7 @@ bot.command(:materials) do |event|
 	event << 'Feel free to check our <#126578658423865344> for more info'
 	puts 'CMD: FAQ MATERIALS'
 end
+
 #-------------COMMAND WIKI-------------
 bot.command(:wiki) do |event|
 	cmdcount += 1
@@ -303,6 +499,7 @@ bot.command(:wiki) do |event|
 	event << 'Feel free to check our <#126578658423865344> for more info'
 	puts 'CMD: FAQ WIKI'
 end
+
 #-------------COMMAND STATS-------------
 bot.command(:stats) do |event|
 	cmdcount += 1
@@ -310,6 +507,7 @@ bot.command(:stats) do |event|
 	event << "#{p Uptime.uptime} Online```"
 	puts 'CMD: stats'
 end
+
 #-------------COMMAND INFO-------------
 bot.command(:info) do |event|
 	cmdcount += 1
@@ -323,6 +521,7 @@ bot.command(:info) do |event|
 	event << 'updated: 21.03.2016```'
 	puts 'CMD: info'
 end
+
 #-------------COMMAND SET MAINSETUP-------------
 bot.command(:mainsetup, permission_level: 1) do |event, hours, minutes|
 	cmdcount += 1
@@ -337,6 +536,7 @@ bot.command(:mainsetup, permission_level: 1) do |event, hours, minutes|
 		time -= 1
 	end
 end
+
 #-------------COMMAND GET MHO REMINDER TIME-------------
 bot.command(:maintenance) do |event|
 	cmdcount += 1
@@ -347,6 +547,7 @@ bot.command(:maintenance) do |event|
 	event.respond "**#{a}:#{b}:#{c}** seconds left"
 	puts 'CMD: countdown get'
 end
+
 #-------------COMMAND GET MHO REMINDER TIME-------------
 bot.command(:maint) do |event|
 	cmdcount += 1
@@ -357,6 +558,7 @@ bot.command(:maint) do |event|
 	event.respond "**#{a}:#{b}:#{c}** seconds left"
 	puts 'CMD: countdown get'
 end
+
 #-------------COMMAND GET RAID TIMERS-------------
 bot.command(:raid) do |event|
 	cmdcount += 1
@@ -419,6 +621,7 @@ bot.command(:raid) do |event|
 	event << 'no raids are currently set up' if nout == 0
 	puts 'CMD: get raid timer'
 end
+
 #-------------COMMAND SET MHO RAID 1-------------
 bot.command(:raid1, permission_level: 1) do |event, hours1, minutes1, *name1|
 	cmdcount += 1
@@ -434,6 +637,7 @@ bot.command(:raid1, permission_level: 1) do |event, hours1, minutes1, *name1|
 		time1 -= 1
 	end
 end
+
 #-------------COMMAND SET MHO RAID 2-------------
 bot.command(:raid2, permission_level: 1) do |event, hours2, minutes2, *name2|
 	cmdcount += 1
@@ -449,6 +653,7 @@ bot.command(:raid2, permission_level: 1) do |event, hours2, minutes2, *name2|
 		time2 -= 1
 	end
 end
+
 #-------------COMMAND SET MHO RAID 3-------------
 bot.command(:raid3, permission_level: 1) do |event, hours3, minutes3, *name3|
 	cmdcount += 1
@@ -464,6 +669,7 @@ bot.command(:raid3, permission_level: 1) do |event, hours3, minutes3, *name3|
 		time3 -= 1
 	end
 end
+
 #-------------COMMAND SET MHO RAID 4-------------
 bot.command(:raid4, permission_level: 1) do |event, hours4, minutes4, *name4|
 	cmdcount += 1
@@ -479,6 +685,7 @@ bot.command(:raid4, permission_level: 1) do |event, hours4, minutes4, *name4|
 		time4 -= 1
 	end
 end
+
 #-------------COMMAND SET MHO RAID 5-------------
 bot.command(:raid5, permission_level: 1) do |event, hours5, minutes5, *name5|
 	cmdcount += 1
@@ -494,6 +701,7 @@ bot.command(:raid5, permission_level: 1) do |event, hours5, minutes5, *name5|
 		time5 -= 1
 	end
 end
+
 puts 'DONE!'
 print 'starting bot...'
 bot.run :async
