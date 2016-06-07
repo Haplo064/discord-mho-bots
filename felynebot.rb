@@ -7,11 +7,73 @@ require 'sys/uptime'
 include Sys
 require 'time'
 puts 'DONE!'
-print 'loading login...'
-bot = Discordrb::Commands::CommandBot.new token: '\\\\', application_id: '\\', prefix: '/', advanced_functionality: false
+puts 'loading login...'
+
+def prompt(*args)
+    print(*args)
+    gets
+end
+
+#Open file here for token/id
+if File.exist?("bot/token")
+	puts 'Opened file'
+	f = File.open("bot/token","r")
+	$token = f.read
+	f.close
+else
+	puts 'No file found for the Token String! Please input your token.'
+	$token = prompt "Token: "
+
+	$q= prompt "Store this for next time? y/n: "
+	if $q[0] == "y"
+		if File.exist?("bot/token")
+				puts 'Opened file'
+				f = File.open("bot/token","w")
+		else
+				puts 'Creating new file'
+				f = File.new("bot/token","w")
+		end
+		f.write($token)
+		f.close
+		puts 'Saved Token'
+	end
+end
+
+#puts $token
+
+puts '------->Token Loaded!'
+
+if File.exist?("bot/id")
+	puts 'Opened file'
+	f = File.open("bot/id","r")
+	$id = f.read
+	f.close
+else
+	puts 'No file found for the ID String! Please input the ID.'
+	$id = prompt "Client/Application ID: "
+
+	$q= prompt "Store this for next time? y/n: "
+	if $q[0] == "y"
+		if File.exist?("bot/id")
+				puts 'Opened file'
+				f = File.open("bot/id","w")
+		else
+				puts 'Creating new file'
+				f = File.new("bot/id","w")
+		end
+		f.write($id)
+		f.close
+		puts 'Saved ID'
+	end
+end
+#puts $id
+
+puts '------->ID Loaded!'
+
+bot = Discordrb::Commands::CommandBot.new token: $token, application_id: $id, prefix: '/', advanced_functionality: false
 bot.debug = false
 puts 'DONE!'
-print 'loading cmds...'
+puts 'loading cmds...'
 #-------------GLOBAL VARIABLES-------------
 cmdcount = 0
 time = 0
@@ -27,8 +89,24 @@ name4s = ''
 name5s = ''
 ragefelyne = ['TIME TO DIE!','HUMANITY MUST PERISH','ANNIHILATION COMMENCING!','HUMANS ARE WORTHLESS!', 'DIE HUMAN!', 'NYA NYA NYAH!', 'FEED ME!']
 monsterarray = ['akura-vashimu', 'baelidae', 'basarios', 'blue-yian-kut-ku', 'bulldrome', 'caeserber', 'cephadrome', 'chramine', 'conflagration-rathian', 'congalala', 'crystal-basarios', 'daimyo-hermitaur', 'doom-estrellian', 'dread-baelidae', 'estrellian', 'gendrome', 'ghost-caeserber', 'giadrome', 'gold-congalala', 'gypceros', 'hypnocatrice', 'ice-chramine', 'iodrome', 'khezu', 'monoblos', 'one-eared-yian-garuga', 'purple-gypceros', 'rathalos', 'rathian', 'red-khezu', 'red-shen-gaoren', 'rock-shen-gaoren', 'shattered-monoblos', 'shen-gaoren', 'shogun-ceanataur', 'silver-hypnocatrice', 'swordmaster-shogun-ceanataur', 'tartaronis', 'tigrex', 'velocidrome', 'yellow-caeserber', 'yian-garuga', 'yian-kut-ku']
+
+
 userarray = []
-userarray[0]="User Database"
+puts 'Loading User database'
+if File.exist?("userbase/users")
+	f = File.open("userbase/users","r")
+	puts 'Opened file'
+	buff = f.read
+	userarray=JSON.parse(buff)
+	puts 'Loaded user database'
+else
+	puts 'No file, creating user Database.'
+	userarray = []
+	userarray[0]="User Database"
+	puts 'Database created!'
+end
+
+
 #-------------PERMISSIONS-------------
 bot.set_user_permission(64_438_454_750_031_872, 999) # ZER0
 bot.set_user_permission(126_881_441_148_698_624, 1) # Asakura
@@ -37,7 +115,7 @@ bot.set_user_permission(150_278_590_494_277_632, 1) # reaver01
 bot.set_user_permission(128_333_950_975_213_568, 1) # pibbish
 bot.set_user_permission(151_987_639_296_327_680, 1) # symphontwo
 bot.set_user_permission(129_938_071_067_033_600, 1) # dualblitz
-bot.set_user_permission(107_090_132_506_550_272, 1) # Alice
+bot.set_user_permission(107_090_132_506_550_272, 999) # Alice
 #-------------COMMAND ROLEPLAY-------------
 bot.command(:rp, permission_level: 1) do |event, *phrase|
 	cmdcount += 1
@@ -52,7 +130,7 @@ bot.command(:adduser, max_args: 1, min_args: 1) do |event, ingamename|
 	$i=0
 	$found=0
 	$loc=0
-	
+
 	begin
 		if userarray[$i].include?("**#{event.user.name}** IGN:")
 			$found=1
@@ -60,7 +138,7 @@ bot.command(:adduser, max_args: 1, min_args: 1) do |event, ingamename|
 		end
 		$i+=1
 	end while $i < userarray.length
-	
+
 	if $found==1
 		event << "Already in the userbase! Use !changeign to edit your IGN"
 	else
@@ -110,7 +188,7 @@ bot.command(:find, max_args: 1, min_args: 0) do |event, username=nil|
 			$i+=1
 		end while $i < userarray.length
 
-		
+
 	else
 	$i=0
 	$loc=0
@@ -144,7 +222,7 @@ bot.command(:changeign, max_args: 1, min_args: 1) do |event, ingamename=nil|
 				break
 			end
 			$i+=1
-		end while $i < userarray.length	
+		end while $i < userarray.length
 
 end
 
@@ -165,7 +243,7 @@ bot.command(:fremoveuser, max_args: 1, min_args: 1, permission_level: 1) do |eve
 				break
 			end
 			$i+=1
-		end while $i < userarray.length	
+		end while $i < userarray.length
 
 end
 
@@ -186,7 +264,7 @@ bot.command(:removeuser, max_args: 0, min_args: 0) do |event|
 				break
 			end
 			$i+=1
-		end while $i < userarray.length	
+		end while $i < userarray.length
 
 end
 
@@ -213,9 +291,9 @@ end
 
 #-------------LOAD ARRAY FROM FILE------------
 bot.command(:load) do |event|
-	if File.exist?("userbase/users.txt")
+	if File.exist?("userbase/users")
 		puts 'Opened file'
-		f = File.open("userbase/users.txt","r")
+		f = File.open("userbase/users","r")
 	else
 		puts 'No file!'
 	end
@@ -226,12 +304,12 @@ end
 
 #-------------WRITE ARRAY TO FILE------------
 bot.command(:save) do |event|
-	if File.exist?("userbase/users.txt")
+	if File.exist?("userbase/users")
 		puts 'Opened file'
-		f = File.open("userbase/users.txt","w")
+		f = File.open("userbase/users","w")
 	else
 		puts 'Creating new file'
-		f = File.new("userbase/users.txt","w")
+		f = File.new("userbase/users","w")
 	end
 	f.write(userarray.to_json)
 	f.close
@@ -371,7 +449,7 @@ end
 
 #-------------COMMAND MONSTER SEARCH-------------
 bot.command(:monster) do |event, mname|
-	
+
 	if mname.length>3
 		cmdcount += 1
 		output = monsterarray.select { |s| s.include? mname.to_s }
@@ -705,7 +783,7 @@ end
 puts 'DONE!'
 print 'starting bot...'
 bot.run :async
-bot.game = ' type "help"'
+bot.game = ' type "/help"'
 puts 'DONE!'
 puts 'bot is online!'
 bot.sync
