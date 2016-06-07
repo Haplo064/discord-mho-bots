@@ -1,5 +1,5 @@
 #TODO add permission setting/removing/adding
-#Rage mode addendum
+#Rage mode Fixendum
 
 puts 'starting felynebot'
 print 'loading require...'
@@ -73,12 +73,13 @@ end
 puts '------->ID Loaded!'
 
 #Create the bot object
-bot = Discordrb::Commands::CommandBot.new token: token, application_id: id, prefix: '/', advanced_functionality: false
+bot = Discordrb::Commands::CommandBot.new token: token, application_id: id, prefix: '-', advanced_functionality: false
 bot.debug = false
 puts 'DONE!'
 puts 'loading cmds...'
 
 #-------------GLOBAL VARIABLES-------------
+rage=0
 cmdcount = 0
 time = 0
 time1 = 0
@@ -91,7 +92,9 @@ name2s = ''
 name3s = ''
 name4s = ''
 name5s = ''
-ragefelyne = ['TIME TO DIE!','HUMANITY MUST PERISH','ANNIHILATION COMMENCING!','HUMANS ARE WORTHLESS!', 'DIE HUMAN!', 'NYA NYA NYAH!', 'FEED ME!']
+angryfelyne = ['Stop it!','Whyre you so mean.','Ill get you!','Waaaaaaaaa! ;_;','Stop it!']
+ragefelyne = ['Im getting angry!','The rage is building!','Anger... Increasing!','Raaaaaaaaaaa!','Im getting angry!']
+rage2felyne = ['IM SO ANGRY!','HATRED FLOWS THROUGH MY VEIGNS!','PIBBISH IS A BAD MAN','HWAAAAAOOOAAAAAAAGH!','IM SO ANGRY!']
 monsterarray = ['akura-vashimu', 'baelidae', 'basarios', 'blue-yian-kut-ku', 'bulldrome', 'caeserber', 'cephadrome', 'chramine', 'conflagration-rathian', 'congalala', 'crystal-basarios', 'daimyo-hermitaur', 'doom-estrellian', 'dread-baelidae', 'estrellian', 'gendrome', 'ghost-caeserber', 'giadrome', 'gold-congalala', 'gypceros', 'hypnocatrice', 'ice-chramine', 'iodrome', 'khezu', 'monoblos', 'one-eared-yian-garuga', 'purple-gypceros', 'rathalos', 'rathian', 'red-khezu', 'red-shen-gaoren', 'rock-shen-gaoren', 'shattered-monoblos', 'shen-gaoren', 'shogun-ceanataur', 'silver-hypnocatrice', 'swordmaster-shogun-ceanataur', 'tartaronis', 'tigrex', 'velocidrome', 'yellow-caeserber', 'yian-garuga', 'yian-kut-ku']
 userarray = []
 
@@ -155,6 +158,9 @@ bot.set_user_permission(129_938_071_067_033_600, 1) # dualblitz
 
 
 
+bot.command(:setrage) do |event, ragex|
+	rage+=ragex
+end
 #-------------COMMAND ROLEPLAY-------------
 bot.command(:rp, permission_level: 1) do |event, *phrase|
 	cmdcount += 1
@@ -171,7 +177,7 @@ bot.command(:adduser, max_args: 1, min_args: 1) do |event, ingamename|
 	loc=0
 
 	begin
-		if userarray[i].include?("**#{event.user.name}** IGN:")
+		if userarray[i].include?("**<@#{event.user.id}>** IGN:")
 			found=1
 			loc=i
 		end
@@ -179,15 +185,24 @@ bot.command(:adduser, max_args: 1, min_args: 1) do |event, ingamename|
 	end while i < userarray.length
 
 	if found==1
-		event << "Already in the userbase! Use !changeign to edit your IGN"
+		event << "Already in the userbase! Use -changeign to edit your IGN"
 	else
-		userarray.push("**#{event.user.name}** IGN: **#{ingamename}**")
-		event << "added **#{event.user.name}** IGN: **#{ingamename}**"
+		userarray.push("**<@#{event.user.id}>** IGN: **#{ingamename}**")
+		event << "added **<@#{event.user.id}>** IGN: **#{ingamename}**"
 	end
 	puts 'CMD: adduser'
 	save(userarray, "userbase/users")
 end
 
+#Drop the username table
+bot.command(:dropusertable, max_args: 0, min_args: 0, permission_level: 999) do |event|
+	userarray=userarray.drop(userarray.length)
+	userarray[0]="User Database"
+	p userarray
+	save(userarray, "userbase/users")
+end
+
+#Hacky command to get id
 bot.command(:id, max_args: 0, min_args: 0) do |event|
 	event << event.user.id
 end
@@ -197,7 +212,7 @@ bot.command(:fadduser, max_args: 2, min_args: 2, permission_level: 1) do |event,
 	#Forces the database to add a new user. Only use if needed!
 	cmdcount += 1
 	userarray.push("**#{username}** IGN: **#{ingamename}**")
-	event << "added **#{username}** IGN: **#{ingamename}**"
+	event << "added **<@#{username}>** IGN: **#{ingamename}**"
 	puts 'CMD: forceadduser'
 	save(userarray, "userbase/users")
 end
@@ -258,11 +273,11 @@ bot.command(:changeign, max_args: 1, min_args: 1) do |event, ingamename=nil|
 	i=0
 	loc=0
 		begin
-			if userarray[i].include?("**#{event.user.name}** IGN:")
+			if userarray[i].include?("**<@#{event.user.id}>** IGN:")
 				loc=i
 				event << userarray[loc]
 				event << 'Changed to:'
-				userarray[i]="**#{event.user.name}** IGN: **#{ingamename}**"
+				userarray[i]="**<@#{event.user.id}>** IGN: **#{ingamename}**"
 				event << userarray[loc]
 				break
 			end
@@ -297,7 +312,7 @@ bot.command(:removeuser, max_args: 0, min_args: 0) do |event|
 	i=0
 	loc=0
 		begin
-			if userarray[i].include?("**#{event.user.name}** IGN:")
+			if userarray[i].include?("**<@#{event.user.id}>** IGN:")
 				loc=i
 				event << "Found #{userarray[i]}"
 				front = userarray[0,i]
@@ -394,41 +409,6 @@ bot.command(:ding) do |event|
 	puts 'CMD: ding'
 end
 
-#-------------COMMAND HELP-------------
-bot.command(:help) do |event|
-	cmdcount += 1
-	event << '``commands``'
-	event << '**raid** shows current raids with time left'
-	event << '**maintenance, maint** shows time left until the next maintenance (if set up by mods)'
-	event << '**stats** shows current bot stats'
-	event << '**help** shows all commands'
-	event << '**time, reset** shows the time left untill the next exp/gift reset'
-	event << '**server** shows what server we are playing on'
-	event << '**monster <keyword>** search for monsters and return the pages'
-	event << '**translation** shows the translation help'
-	event << ''
-	event << '``faq stuff``'
-	event << '**wiki** links the wiki page'
-	event << '**jewelry** jewelry wiki page'
-	event << '**weapons** weapons wiki page'
-	event << '**quests** quests wiki page'
-	event << '**cats** cats wiki page'
-	event << '**gathering** gathering wiki page'
-	event << '**food** food wiki page'
-	event << '**vip** vip wiki page'
-	event << '**grouping** grouping wiki page'
-	event << '**crafting** crafting wiki page'
-	event << '**materials** materials wiki page'
-	event << ''
-	event << '``mod/admin commands``'
-	event << '**raid1 <hours> <minutes> <name (can include whitespaces)>** set up a raid. Currently 5 raids can be set up.'
-	event << '**mainsetup <hours> <minutes>** function'
-	event << ''
-	event << '``prototypes``'
-	event << '**users <serchkeyword>** list all users or search for specific users'
-	puts 'CMD: help'
-end
-
 #-------------COMMAND SECRET-------------
 bot.command(:secret) do |event|
 	cmdcount += 1
@@ -443,15 +423,26 @@ end
 #-------------COMMAND RAGE-------------
 bot.command(:rage) do |event|
 	cmdcount += 1
-	bot.profile.avatar = File.open('/home/pi/Documents/discord/Felynebot/pic/avatar_rage.jpg')
-	event.respond ragefelyne[rand(0..ragefelyne.length)]
-	puts 'CMD: rage'
+	rage=rage+1
+	if rage>0 and rage<10
+		bot.profile.avatar = File.open('pic/avatar_angry.jpg')
+		event << angryfelyne[rand(3)+1]
+	end
+	if rage>10 and rage <50
+			bot.profile.avatar = File.open('pic/avatar_rage.jpg')
+			event << ragefelyne[rand(3)+1]
+	end
+	if rage >50
+		bot.profile.avatar = File.open('pic/avatar_rage2.jpg')
+		event << rage2felyne[rand(3)+1]
+	end
+
 end
 
 #-------------COMMAND NORMAL-------------
 bot.command(:normal) do |event|
 	cmdcount += 1
-	bot.profile.avatar = File.open('/home/pi/Documents/discord/Felynebot/pic/avatar_normal.jpg')
+	bot.profile.avatar = File.open('pic/avatar_normal.jpg')
 	event << '**BACK TO NORMAL!**'
 	puts 'CMD: normal'
 end
