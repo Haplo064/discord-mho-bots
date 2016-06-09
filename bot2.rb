@@ -7,6 +7,7 @@ require 'json'
 require 'discordrb'
 require 'rubygems'
 require 'sys/uptime'
+require 'active_support'
 include Sys
 require 'time'
 puts 'DONE!'
@@ -96,7 +97,7 @@ angryfelyne = ['Stop it!','Whyre you so mean.','Ill get you!','Waaaaaaaaa! ;_;',
 ragefelyne = ['Im getting angry!','The rage is building!','Anger... Increasing!','Raaaaaaaaaaa!','Im getting angry!']
 rage2felyne = ['IM SO ANGRY!','HATRED FLOWS THROUGH MY VEIGNS!','PIBBISH IS A BAD MAN','HWAAAAAOOOAAAAAAAGH!','IM SO ANGRY!']
 monsterarray = ['akura-vashimu', 'baelidae', 'basarios', 'blue-yian-kut-ku', 'bulldrome', 'caeserber', 'cephadrome', 'chramine', 'conflagration-rathian', 'congalala', 'crystal-basarios', 'daimyo-hermitaur', 'doom-estrellian', 'dread-baelidae', 'estrellian', 'gendrome', 'ghost-caeserber', 'giadrome', 'gold-congalala', 'gypceros', 'hypnocatrice', 'ice-chramine', 'iodrome', 'khezu', 'monoblos', 'one-eared-yian-garuga', 'purple-gypceros', 'rathalos', 'rathian', 'red-khezu', 'red-shen-gaoren', 'rock-shen-gaoren', 'shattered-monoblos', 'shen-gaoren', 'shogun-ceanataur', 'silver-hypnocatrice', 'swordmaster-shogun-ceanataur', 'tartaronis', 'tigrex', 'velocidrome', 'yellow-caeserber', 'yian-garuga', 'yian-kut-ku']
-userarray = []
+users = []
 egame = []
 egamescore = []
 egamehigh = ["Alice",0]
@@ -137,11 +138,11 @@ if File.exist?("userbase/users")
 	f = File.open("userbase/users","r")
 	puts 'Opened file'
 	buff = f.read
-	userarray=JSON.parse(buff)
+	users=JSON.parse(buff)
 	puts 'Loaded user database'
 else
 	puts 'No file, creating user Database.'
-	userarray = [][]
+	users = [][]
 	puts 'Database created!'
 end
 
@@ -165,40 +166,81 @@ end
 
 #-----------MESSAGES FROM PEOPLE PLAYING E GAME---------------
 bot.message() do |event|
+if !egame.empty?
   i=0
-  found=0
+  playing=0
   begin
-    if egame[i]==(event.author.id)
-      found=1
-      user=i
+    if egame[i][0]==(event.author.id) && egame[i][1]==true
+      playing=1
+      player=i
     end
     i+=1
   end while i < egame.length
 
-  if event.content.include?('e') and found == 1
+  if event.content.downcase.include?('e') && playing == 1
     puts "Has an E! #{event.author.name} LOST. -joinword to try again"
-    #delete user from egame
-    egame = egame - [event.author.id]
-  else #message doesn't have an e
-    if found == 1
-      i=0
-      begin
-        if egamescore[i][0]==(event.author.id)
-          egamescore[i][1]+=event.content.length
-        end
-        i+=1
-      end while i < egamescore.length
+    egame[player][1]=false
+    event << "You lost #{event.author.name}! Try -joinword to play again!"
+
+    if egame[player][3]>egame[player][2]
+      event << "Not as good as your best effort #{event.author.name}: #{egame[player][3]}. You only scored #{egame[player][2]}"
     end
+    if egame[player][2]>egame[player][3]
+      egame[player][3]=egame[player][2]
+      event << "New highscore for #{event.author.name}: #{egame[player][3]}."
+      egame[player][2]=0
+    end
+  end #message doesn't have an e
+  if playing == 1 && !event.content.include?('e')
+    egame[player][2]+=event.content.length
   end
+end
 end
 
 
 #-------E GAME-------------------
 bot.command(:joinword, max_args: 0, min_args: 0, description: "Play a game, where you can't use the letter E.") do |event|
+found=0
+i=0
   if egame.empty?
+    puts "epmty"
     #id/playing/score/highscore
     egame.push([event.user.id,true,0,0])
     event << "#{event.author.name} starts to play!"
+    event << "-mytotal to see your current score."
+    event << "-myhigh to see your best!"
+    found=1
+    break
+  end
+i=0
+  begin
+    if egame[i][0]==(event.author.id) && egame[i][1]==false
+      puts "Found, restart"
+      egame[i][1]=true
+      egame[i][2]=0
+      event << "Welcome back #{event.author.name}! Better luck this time!"
+      event << "-mytotal to see your current score."
+      event << "-myhigh to see your best!"
+      found=1
+      break
+    end
+    i+=1
+  end while i < egame.length
+i=0
+  begin
+    if egame[i][0]==(event.author.id) && egame[i][1]==true
+      puts "Found, still playing"
+      event << "You're already playing!"
+      found=1
+    end
+    i+=1
+  end while i < egame.length
+  if found==0
+    puts "not found"
+    egame.push([event.user.id,true,0,0])
+    event << "#{event.author.name} starts to play!"
+    event << "-mytotal to see your current score."
+    event << "-myhigh to see your best!"
   end
 end
 
@@ -206,22 +248,22 @@ end
 bot.command(:mytotal, description: "Get your current score from the Egame.") do |event|
   i=0
   begin
-    if egamescore[i][0]==(event.author.id)
-      event << "Your ongoing total is: #{egamescore[i][1]}"
+    if egame[i][0]==(event.author.id)
+      event << "Your ongoing total is: #{egame[i][2]}"
     end
     i+=1
-  end while i < egamescore.length
+  end while i < egame.length
 end
 
 #Commands for egame score checks
 bot.command(:myhigh) do |event|
   i=0
   begin
-    if egamehigh[i][0]==(event.author.name)
-      event << "Your top total is: #{egamehigh[i][1]}"
+    if egame[i][0]==(event.author.id)
+      event << "Your top total is: #{egame[i][3]}"
     end
     i+=1
-  end while i < egamehigh.length
+  end while i < egame.length
 end
 
 
@@ -241,38 +283,38 @@ bot.command(:adduser, max_args: 1, min_args: 1, description: "Add a user to the 
 	i=0
 	found=0
 
-  if userarray.any?
+  if users.any?
 	   begin
-       if userarray[i][0]==(event.user.id)
+       if users[i][0]==(event.user.id)
          found=1
        end
        i+=1
-     end while i < userarray.length
+     end while i < users.length
 
      if found==1
        event << "Already in the userbase! Use -changeign to edit your IGN"
      else
-       userarray.push([event.user.id,event.user.name,ingamename])
-       event << "Username: **#{userarray[i][1]}**, IGN: **#{userarray[i][2]}**"
+       users.push([event.user.id,event.user.name,ingamename])
+       event << "Username: **#{users[i][1]}**, IGN: **#{users[i][2]}**"
      end
      puts 'CMD: adduser'
-     save(userarray, "userbase/users")
+     save(users, "userbase/users")
    else
-     userarray.push([event.user.id,event.user.name,ingamename])
+     users.push([event.user.id,event.user.name,ingamename])
    end
  end
 #----------Sort array-----------------------
 bot.command(:sort, permission_level: 999) do |event|
-  userarray = userarray.sort {|a,b| a[1] <=> b[1]}
+  users = users.sort {|a,b| a[1] <=> b[1]}
   event << "Done!"
-  save(userarray,"userbase/users")
+  save(users,"userbase/users")
 end
 
 #-----------Drop the username table---------
 bot.command(:dropusertable, max_args: 0, min_args: 0, permission_level: 999, description: "Drops the userbase table. Do not touch.") do |event|
-	userarray=userarray.drop(userarray.length)
-	p userarray
-	save(userarray, "userbase/users")
+	users=users.drop(users.length)
+	p users
+	save(users, "userbase/users")
 end
 
 #-------Hacky command to get id-------------
@@ -289,10 +331,10 @@ end
 bot.command(:fadduser, max_args: 3, min_args: 3, permission_level: 1, description: "Perm1: Forces a user into the database.", usage: "-fadduser <ID> <NAME> <IGN>") do |event, id, uname, ign|
 	#Forces the database to add a new user. Only use for testing!
 	cmdcount += 1
-	userarray.push([id,uname,ign])
+	users.push([id,uname,ign])
 	event << "added **#{id}**, **#{uname}**, **#{ign}**"
 	puts 'CMD: forceadduser'
-	save(userarray, "userbase/users")
+	save(users, "userbase/users")
 end
 
 #-------------COMMAND FIND USER-------------
@@ -304,23 +346,23 @@ bot.command(:find, max_args: 1, min_args: 0, description: "Finds things in the u
     i=1
     str=[]
   	begin
-      if userarray[i][0]!=nil && userarray[i][0]==(username.downcase)
-        str.push(i) unless  userarray.include?(i)
+      if users[i][0]!=nil && users[i][0]==(username.downcase)
+        str.push(i) unless  users.include?(i)
       end
-      if userarray[i][1]!=nil && userarray[i][1].downcase.include?(username.downcase)
-        str.push(i) unless  userarray.include?(i)
+      if users[i][1]!=nil && users[i][1].downcase.include?(username.downcase)
+        str.push(i) unless  users.include?(i)
       end
-      if userarray[i][2]!=nil && userarray[i][2].downcase.include?(username.downcase)
-        str.push(i) unless  userarray.include?(i)
+      if users[i][2]!=nil && users[i][2].downcase.include?(username.downcase)
+        str.push(i) unless  users.include?(i)
       end
-      if userarray[i][3]!=nil && userarray[i][3].downcase.include?(username.downcase)
-        str.push(i) unless  userarray.include?(i)
+      if users[i][3]!=nil && users[i][3].downcase.include?(username.downcase)
+        str.push(i) unless  users.include?(i)
       end
-      if userarray[i][4]!=nil && userarray[i][4].downcase.include?(username.downcase)
-        str.push(i) unless  userarray.include?(i)
+      if users[i][4]!=nil && users[i][4].downcase.include?(username.downcase)
+        str.push(i) unless  users.include?(i)
       end
   		i+=1
-  	end while i < userarray.length
+  	end while i < users.length
 
     if str!=nil
       str = str.uniq
@@ -329,36 +371,36 @@ bot.command(:find, max_args: 1, min_args: 0, description: "Finds things in the u
       event << "`Name               IGN                 Guild               Timezone`"
     	begin
         var = ""
-        if userarray[str[i]][1]!=nil
-          var << "`#{userarray[str[i]][1].to_s}"
+        if users[str[i]][1]!=nil
+          var << "`#{users[str[i]][1].to_s}"
 
         end
-        if userarray[str[i]][2]!=nil
+        if users[str[i]][2]!=nil
           while var.length < 20  do
             var << " "
           end
-          var << "#{userarray[str[i]][2].to_s}"
+          var << "#{users[str[i]][2].to_s}"
 
         end
-        if userarray[str[i]][3]!=nil
+        if users[str[i]][3]!=nil
           while var.length < 40  do
             var << " "
           end
-          var << "#{userarray[str[i]][3].to_s}"
+          var << "#{users[str[i]][3].to_s}"
 
         end
-        if userarray[str[i]][4]!=nil
+        if users[str[i]][4]!=nil
           while var.length < 60  do
             var << " "
           end
-          var << "#{userarray[str[i]][4].to_s}"
+          var << "#{users[str[i]][4].to_s}"
         end
         #Gotta have this last!
-        if userarray[str[i]][1]!=nil
+        if users[str[i]][1]!=nil
           var << "`"
         end
         event << var
-        #event << "Username: **#{userarray[i][1]}**, IGN: **#{userarray[i][2]}**, GUILD: **#{userarray[i][3]}**"
+        #event << "Username: **#{users[i][1]}**, IGN: **#{users[i][2]}**, GUILD: **#{users[i][3]}**"
         i+=1
   		end while i < str.length
     end
@@ -367,12 +409,12 @@ bot.command(:find, max_args: 1, min_args: 0, description: "Finds things in the u
   else
     i=1
   	begin
-  		if userarray[i][0]==(event.user.id)
+  		if users[i][0]==(event.user.id)
   			found=1
-        event << "Username: **#{userarray[i][1]}**, IGN: **#{userarray[i][2]}**"
+        event << "Username: **#{users[i][1]}**, IGN: **#{users[i][2]}**"
   		end
   	 i+=1
-  	end while i < userarray.length
+  	end while i < users.length
   end
 end
 
@@ -380,19 +422,19 @@ end
 bot.command(:changeign, max_args: 1, min_args: 1, description: "Changes a users IGN in the database.", usage: "-changeign <IGN>") do |event, ingamename="X"|
 	#This will kinda screw up if multiple igns have the same id. Hence why the force add username is restricted.
 	i=0
-  if userarray.length>1
+  if users.length>1
 		begin
-			if userarray[i][0]==(event.user.id)
+			if users[i][0]==(event.user.id)
         event << "Changing Database"
-				event << "Username: **#{userarray[i][1]}**, IGN: **#{userarray[i][2]}**"
-        userarray[i][2]=ingamename
+				event << "Username: **#{users[i][1]}**, IGN: **#{users[i][2]}**"
+        users[i][2]=ingamename
 				event << 'Changed to:'
-				event << "Username: **#{userarray[i][1]}**, IGN: **#{userarray[i][2]}**"
+				event << "Username: **#{users[i][1]}**, IGN: **#{users[i][2]}**"
 			break
 			end
 			i+=1
-		end while i < userarray.length
-		save(userarray, "userbase/users")
+		end while i < users.length
+		save(users, "userbase/users")
   end
 end
 
@@ -403,20 +445,20 @@ bot.command(:fremoveuser, max_args: 1, min_args: 1, permission_level: 1, descrip
   number=number.to_i
   puts number
 		begin
-      puts userarray[i][0]==number
-			if userarray[i][0]==number
-				event << "Found #{userarray[i][0]}"
-				front = userarray[0,i]
+      puts users[i][0]==number
+			if users[i][0]==number
+				event << "Found #{users[i][0]}"
+				front = users[0,i]
 				#p front
-				back=userarray.drop(i+1)
+				back=users.drop(i+1)
 				#p back
-				userarray=front.push(*back)
+				users=front.push(*back)
 				event << "Forced #{number} from the list."
 				break
 			end
 			i+=1
-		end while i < userarray.length
-		save(userarray, "userbase/users")
+		end while i < users.length
+		save(users, "userbase/users")
 	end
 
 #-------------COMMAND REMOVE USERS-------------
@@ -424,95 +466,104 @@ bot.command(:removeuser, max_args: 0, min_args: 0, description: "Removes user fr
 	i=0
 	loc=0
 		begin
-			if userarray[i][0]==event.user.id
-				event << "Found #{userarray[i][1]}"
-				front = userarray[0,i]
+			if users[i][0]==event.user.id
+				event << "Found #{users[i][1]}"
+				front = users[0,i]
 				#p front
-				back=userarray.drop(i+1)
+				back=users.drop(i+1)
 				#p back
-				userarray=front.push(*back)
+				users=front.push(*back)
 				event << "Removed"
 				break
 			end
 			i+=1
-		end while i < userarray.length
-		save(userarray, "userbase/users")
+		end while i < users.length
+		save(users, "userbase/users")
 	end
 
 #-------------COMMAND ADD GUILD----------------
 bot.command(:guild, max_args: 1, min_args: 0, description: "Adds guild for user to the database.", usage: "-guild <guildname>") do |event, guild=nil|
   i=1
   begin
-    if userarray[i][0]==(event.user.id)
+    if users[i][0]==(event.user.id)
       found=1
-      userarray[i][3]=guild
-      event << "Username: **#{userarray[i][1]}**, IGN: **#{userarray[i][2]}**, Guild:**#{userarray[i][3]}**"
-      save(userarray,"userbase/users")
+      users[i][3]=guild
+      event << "Username: **#{users[i][1]}**, IGN: **#{users[i][2]}**, Guild:**#{users[i][3]}**"
+      save(users,"userbase/users")
     end
     i+=1
-  end while i < userarray.length
+  end while i < users.length
 end
 
 #-------------COMMAND ADD TIMEZONE----------------
-bot.command(:zone, max_args: 1, min_args: 0, description: "Adds timezone for user to the database.", usage: "-timezone <timezone>") do |event, zone=nil|
+bot.command(:timezone, max_args: 1, min_args: 0, description: "Adds timezone for user to the database.", usage: "-timezone <timezone>") do |event, zone=nil|
   i=1
   begin
-    if userarray[i][0]==(event.user.id)
+    if users[i][0]==(event.user.id)
       found=1
-      userarray[i][4]=zone
-      event << "Username: **#{userarray[i][1]}**, IGN: **#{userarray[i][2]}**, Zone: **#{userarray[i][4]}**"
-      save(userarray,"userbase/users")
+      users[i][4]=zone
+      event << "Username: **#{users[i][1]}**, IGN: **#{users[i][2]}**, Zone: **#{users[i][4]}**"
+      save(users,"userbase/users")
     end
     i+=1
-  end while i < userarray.length
+  end while i < users.length
 end
 
 #-------------COMMAND SHOW USERS-------------
-bot.command(:users, description: "Shows all users in the database.", usage: "-users") do |event, uname|
-  if userarray.length == 0
+bot.command(:user, description: "Shows all users in the database.", usage: "-users", min_args: 0, max_args: 1) do |event, page=nil|
+
+  if page==nil
+    page=0
+  else
+    page=page.to_i-1
+  end
+
+  if users.length == 0
     event << "User table is empty!"
     break
   else
   	cmdcount += 1
-    i=1
+    pages=users.length/20
+    i=(users.length/pages)*page
   	loc=0
     event << "User Database:"
     event << "`Name               IGN                 Guild               Timezone`"
   		begin
         str = ""
-        if userarray[i][1]!=nil
-          str << "`#{userarray[i][1].to_s}"
+        if users[i][1]!=nil
+          str << "`#{users[i][1].to_s}"
 
         end
-        if userarray[i][2]!=nil
+        if users[i][2]!=nil
           while str.length < 20  do
             str << " "
           end
-          str << "#{userarray[i][2].to_s}"
+          str << "#{users[i][2].to_s}"
 
         end
-        if userarray[i][3]!=nil
+        if users[i][3]!=nil
           while str.length < 40  do
             str << " "
           end
-          str << "#{userarray[i][3].to_s}"
+          str << "#{users[i][3].to_s}"
 
         end
-        if userarray[i][4]!=nil
+        if users[i][4]!=nil
           while str.length < 60  do
             str << " "
           end
-          str << "#{userarray[i][4].to_s}"
+          str << "#{users[i][4].to_s}"
 
         end
         #Gotta have this last!
-        if userarray[i][1]!=nil
+        if users[i][1]!=nil
           str << "`"
         end
         event << str
-        #event << "Username: **#{userarray[i][1]}**, IGN: **#{userarray[i][2]}**, GUILD: **#{userarray[i][3]}**"
+        #event << "Username: **#{users[i][1]}**, IGN: **#{users[i][2]}**, GUILD: **#{users[i][3]}**"
         i+=1
-  		end while i < userarray.length
+  		end while i < (users.length/pages)*(page+1)
+      event << "Showing page #{page+1}/#{pages}"
   	end
   end
 
@@ -526,7 +577,7 @@ bot.command(:load, description: "Loads user array file.", usage: "-load") do |ev
 		puts 'No file!'
 	end
 	buff = f.read
-	userarray=JSON.parse(buff)
+	users=JSON.parse(buff)
 	puts 'Loaded user database'
 end
 
@@ -539,7 +590,7 @@ bot.command(:save, description: "Saves user array to file.", usage: "-save") do 
 		puts 'Creating new file'
 		f = File.new("userbase/users","w")
 	end
-	f.write(userarray.to_json)
+	f.write(users.to_json)
 	f.close
 	puts 'Saved user database'
 end
@@ -804,7 +855,7 @@ bot.command(:info) do |event|
 	event << "Ruby patchlevel: #{RUBY_PATCHLEVEL}"
 	event << "Ruby release date: #{RUBY_RELEASE_DATE}"
 	event << 'Ruby DevelopmentKit: No Dev Kit (Linux)'
-	event << 'Hardware: Raspberry Pi2'
+  event << 'Hardware: Raspberry Pi2'
 	event << 'Big Thanks to the Bot Community and @meew0'
 	event << 'Creator: @ZerO (ask him if there are any questions)'
 	event << 'updated: 21.03.2016```'
