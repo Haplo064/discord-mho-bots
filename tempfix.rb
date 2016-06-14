@@ -30,7 +30,7 @@ class User
     @usr_guild=nil
     @user_timezone=nil
 
-    if array.length==0
+    if array.empty?
       array.push(self)
       b.send_message(channel, "**#{name}** not found in (empty) database, added. IGN: **#{ign}**")
     else
@@ -231,6 +231,7 @@ bot.command(:userlist, min_args: 0, max_args: 1, description: "Shows the user da
     if pages<1 then pages=1 end
     if page>=pages then page=0 end
     i=(users.length/pages)*page
+    puts i
     event << "User Database:"
     event << "`Name               IGN                 Guild               Timezone`"
       begin
@@ -245,7 +246,7 @@ bot.command(:userlist, min_args: 0, max_args: 1, description: "Shows the user da
         if users[i].name!=nil then str << "`" end
         event << str
         i+=1
-      end while i < 1+(users.length/pages)*(page+1)
+      end while i < (users.length/pages)*(page+1)
       event << "Showing page #{page+1}/#{pages}"
     end
     puts "#{clock.inspect}: #{event.user.name}: -userlist <#{page}>"
@@ -315,6 +316,7 @@ bot.command(:server) do |event|
 end
 #kill the bot
 bot.command(:kill, description: "kills felyne", permission_level: 800) do |event|
+  puts "Daisy... daisy, give me your answer do..."
   bot.stop
   exit
 end
