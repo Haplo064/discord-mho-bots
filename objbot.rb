@@ -42,30 +42,101 @@ class User
       end
     end
   end
-#Defining the user id variable (call it with user.id)
+
+  def addName(name="")
+    @usr_name=name
+  end
+
+  def addIgn(ign="")
+    @usr_ign=ign
+  end
+
+  def addGuild(guild=nil)
+    @usr_guild=guild
+  end
+
+  def addTimezone(zone=nil)
+    @usr_timezone=zone
+  end
+
+  #Defining the user id variable (call it with user.id)
   def id
     @usr_id
   end
-#Defining the user name variable (call it with user.name)
+  #Defining the user name variable (call it with user.name)
   def name
     @usr_name
   end
-#Defining the user ign variable (call it with user.ign)
+  #Defining the user ign variable (call it with user.ign)
   def ign
     @usr_ign
   end
-#Defining the user guild variable (call it with user.guild)
+  #Defining the user guild variable (call it with user.guild)
   def guild
     @usr_guild
   end
-#Defining the user id variable (call it with user.timezone)
+  #Defining the user id variable (call it with user.timezone)
   def timezone
     @usr_timezone
   end
 end
 
-#Creating the actual user array, loading shall be done here
+#Method for saving arrays
+def saveArr(ar,loc)
+	if File.exist?(loc)
+		f = File.open(loc,"w")
+	else
+		f = File.new(loc,"w")
+	end
+	f.write(ar.to_json)
+	f.close
+	puts "Saved File: [#{ar}] into [#{loc}]"
+
+end
+
+#Method for loading arrays
+def loadArr(ar,loc)
+	if File.exist?(loc)
+		#puts 'Opened file'
+		f = File.open(loc,"r")
+	else
+		#puts 'No file!'
+	end
+	buff = f.read
+	ar=JSON.parse(buff)
+	#puts 'Loaded array!'
+	return ar
+end
+
+#Load object arrays
+def loadObj(ar,loc)
+	if File.exist?(loc)
+    f = File.open(loc,"r")
+    users=YAML.load(ar)
+    puts 'Loaded user database'
+    f.close
+  else
+    puts 'No file to load!'
+  end
+end
+
+#save object arrays
+def saveObj(ar,loc)
+  ar.sort! { |a,b| a.name.downcase <=> b.name.downcase }
+	if File.exist?(loc) then File.open(loc, 'w') {|f| f.write(YAML.dump(ar)) }
+	else File.new(loc, 'w') {|f| f.write(YAML.dump(ar)) } end
+end
+
+#Creating the actual user array/loads the file there
 users=[]
+if File.exist?("userbase/users")
+  f = File.open("userbase/users","r")
+  users=YAML.load(f)
+  puts 'Loaded user database'
+  f.close
+else
+  puts 'No file to open!'
+end
 
 
 #Open file for token/Get Token
@@ -118,40 +189,48 @@ end
 
 puts '------->ID Loaded!'
 
+
+
+
+
 #Create the bot object
-bot = Discordrb::Commands::CommandBot.new token: token, application_id: id, prefix: '-', advanced_functionality: false
+bot = Discordrb::Commands::CommandBot.new token: token, application_id: id, prefix: '=', advanced_functionality: false
 bot.debug = false
-puts 'DONE!'
+puts 'Bot Created!'
 
+#Loads permissions from array
+puts 'Permessions Loading!'
+permarray=[]
+permarray = loadArr(permarray,"userbase/perm")
 
+#Loading permissions array
+pos=0
+begin
+	bot.set_user_permission(permarray[pos],permarray[pos+1])
+	puts "Added #{permarray[pos+2]} as level #{permarray[pos+1]} user"
+	pos+=3
+end while pos < permarray.length
+puts "------------->Permission Loaded!"
 
-#Experimental
-bot.command(:bot, from: "Alice", description: "Output testing") do |event|
-  event << "Your wish is my command."
-  puts "#{clock.inspect}: #{event.user.name}: -bot"
-end
 
 #Add a user to the database (Now with objects!)
 bot.command(:adduser,min_args: 1, max_args: 1, description: "Adds a user the the database. -adduser <IGN>", usage: "-adduser <IGN>") do |event, ign|
   puts "#{clock.inspect}: #{event.user.name}: -adduser <#{ign}>"
   tempUser= User.new(event.user.id, event.user.name, ign, users, event.message.channel, bot)
+  saveObj(users,"userbase/users")
   puts "Command worked"
 end
-
+#Show user database
 bot.command(:userlist, min_args: 0, max_args: 1, description: "Shows the user database.") do |event, page=1|
 
   page=page.to_i-1
   if page<0 then page=0 end
-  if users.length == 0
-    event << "User table is empty!"
+  if users.length == 0 then event << "User table is empty!"
   else
-    pages=users.length/20
+    pages=users.length/9
     if pages<1 then pages=1 end
+    if page>=pages then page=0 end
     i=(users.length/pages)*page
-    puts "Old: #{i}"
-    puts "List is: #{users.length-1}"
-    if i>(users.length-1) then i=0 end
-    puts "New: #{i}"
     event << "User Database:"
     event << "`Name               IGN                 Guild               Timezone`"
       begin
@@ -166,43 +245,84 @@ bot.command(:userlist, min_args: 0, max_args: 1, description: "Shows the user da
         if users[i].name!=nil then str << "`" end
         event << str
         i+=1
-      end while i < (users.length/pages)*(page+1)
+      end while i < 1+(users.length/pages)*(page+1)
       event << "Showing page #{page+1}/#{pages}"
     end
+    puts "#{clock.inspect}: #{event.user.name}: -userlist <#{page}>"
 end
-
-
+#Time to reset
+bot.command(:time) do |event|
+  t2 = Time.now.to_i
+  t1 = Time.parse("20:00").to_i
+  if t1 > t2 then event << "#{Time.at(t1 - t2).strftime('**%H** hours **%M** minutes **%S** seconds')} left until the next ticket reset"
+  else event << "#{Time.at(t1 + 86400 - t2).strftime('**%H** hours **%M** minutes **%S** seconds')} left until the next ticket reset" end
+  puts "#{clock.inspect}: #{event.user.name}: -time"
+end
 #Load userdatabase
-bot.command(:load, description: "Loads user array file.", usage: "-load") do |event|
-	if File.exist?("userbase/users")
-		puts 'Opened file'
-		f = File.open("userbase/users","r")
-	else
-		puts 'No file!'
-    break
-	end
+bot.command(:load, description: "Loads user array file.", usage: "-load", permission_level: 100) do |event|
+	if File.exist?("userbase/users") then f = File.open("userbase/users","r") end
 	users=YAML.load(f)
 	puts 'Loaded user database'
   f.close
 end
-
 #save user database
-bot.command(:save, description: "Saves user array to file.", usage: "-save") do |event|
-	if File.exist?("userbase/users")
-		puts 'Opened file'
-		File.open("userbase/users", 'w') {|f| f.write(YAML.dump(users)) }
-	else
-		puts 'Creating new file'
-		File.new("userbase/users", 'w') {|f| f.write(YAML.dump(users)) }
-	end
+bot.command(:save, description: "Saves user array to file.", usage: "-save", permission_level: 100) do |event|
+	if File.exist?("userbase/users") then File.open("userbase/users", 'w') {|f| f.write(YAML.dump(users)) }
+	else File.new("userbase/users", 'w') {|f| f.write(YAML.dump(users)) } end
 	f.close
-	puts 'Saved user database'
+end
+#remove self
+bot.command(:userremove, max_args: 0, min_args: 0, description: "Removes user from the database.", usage: "-userremove") do |event|
+  temp = users.find_index {|s| s.id == event.user.id}
+  if  temp!=nil
+    event << "Found #{event.user.name}"
+    users=users[0,temp].push(*users.drop(temp+1))
+    event << "Removed"
+    saveObj(users, "userbase/users")
+	else
+    event << "No user found."
+  end
+  puts "#{clock.inspect}: #{event.user.name}: [userRemove]"
+end
+#Add guild
+bot.command(:userguild, max_args: 1, min_args: 0, description: "Adds guild for user to the database.", usage: "-userguild <guildname>") do |event, guild=nil|
+  temp = users.find_index {|s| s.id == event.user.id}
+  if  temp!=nil then users[temp].addGuild(guild) end
+  event << "Changed guild to: #{guild}"
+  puts "#{clock.inspect}: #{event.user.name}: [userGuild] <#{guild}>"
+  saveObj(users,"userbase/users")
+end
+#Add timezone
+bot.command(:usertimezone, max_args: 1, min_args: 0, description: "Adds timezone for user to the database.", usage: "-usertimezone <Timezone>") do |event, timezone=nil|
+  temp = users.find_index {|s| s.id == event.user.id}
+  if  temp!=nil then users[temp].addTimezone(timezone) end
+  event << "Changed timezone to: #{timezone}"
+  puts "#{clock.inspect}: #{event.user.name}: [userTimezone] <#{timezone}>"
+  saveObj(users,"userbase/users")
+end
+#Change ign
+bot.command(:userign, max_args: 1, min_args: 1, description: "Changes IGN for user in the database.", usage: "-userign <IGN>") do |event, ign|
+  temp = users.find_index {|s| s.id == event.user.id}
+  if  temp!=nil then users[temp].addIgn(ign) end
+  event << "Changed IGN to #{ign}"
+  puts "#{clock.inspect}: #{event.user.name}: [userIgn] <#{ign}>"
+  saveObj(users,"userbase/users")
+end
+#server
+bot.command(:server) do |event|
+  event << "http://i.imgur.com/EHqV4Cy.jpg"
+	puts "#{clock.inspect}: #{event.user.name}: [server]"
+end
+#kill the bot
+bot.command(:kill, description: "kills felyne", permission_level: 800) do |event|
+  bot.stop
+  exit
 end
 
-puts 'DONE!'
-print 'starting bot...'
+puts 'Loaded commands.'
+print 'Syncing bot...'
 bot.run :async
-bot.game = '-help'
-puts 'DONE!'
-puts 'bot is online!'
+bot.game = 'No touchy!'
+puts 'Sync Confirmed.'
+puts 'SKYNET ONLINE'
 bot.sync
