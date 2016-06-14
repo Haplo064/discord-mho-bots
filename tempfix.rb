@@ -195,6 +195,7 @@ puts '------->ID Loaded!'
 
 #Create the bot object
 bot = Discordrb::Commands::CommandBot.new token: token, application_id: id, prefix: '-', advanced_functionality: false
+
 bot.debug = false
 puts 'Bot Created!'
 
@@ -232,20 +233,21 @@ bot.command(:userlist, min_args: 0, max_args: 1, description: "Shows the user da
     if page>=pages then page=0 end
     i=(users.length/pages)*page
     event << "User Database:"
-    event << "`Name               IGN                 Guild               Timezone`"
+    event << "```Name                IGN                 Guild               Timezone"
       begin
         str = ""
-        if users[i].name!=nil then str << "`#{users[i].name.to_s}" end
+        if users[i].name!=nil then str << "#{users[i].name.to_s}" end
         str=str.ljust(20)
         if users[i].ign!=nil then str << "#{users[i].ign.to_s}" end
         str=str.ljust(40)
         if users[i].guild!=nil then str << "#{users[i].guild.to_s}" end
         str=str.ljust(60)
         if users[i].timezone!=nil then str << "#{users[i].timezone.to_s}" end
-        if users[i].name!=nil then str << "`" end
+        #if users[i].name!=nil then str << "```" end
         event << str
         i+=1
       end while i < (users.length/pages)*(page+1)
+      event << "```"
       event << "Showing page #{page+1}/#{pages}"
     end
     puts "#{clock.inspect}: #{event.user.name}: -userlist <#{page}>"
@@ -267,20 +269,20 @@ bot.command(:userfind, min_args: 1, max_args: 1) do |event, search|
   if !found.empty?
     i=0
     event << "Found User Database:"
-    event << "`Name               IGN                 Guild               Timezone`"
+    event << "```Name                IGN                 Guild               Timezone"
       begin
         str = ""
-        if found[i].name!=nil then str << "`#{found[i].name.to_s}" end
+        if found[i].name!=nil then str << "#{found[i].name.to_s}" end
         str=str.ljust(20)
         if found[i].ign!=nil then str << "#{found[i].ign.to_s}" end
         str=str.ljust(40)
         if found[i].guild!=nil then str << "#{found[i].guild.to_s}" end
         str=str.ljust(60)
         if found[i].timezone!=nil then str << "#{found[i].timezone.to_s}" end
-        if found[i].name!=nil then str << "`" end
         event << str
         i+=1
       end while i < found.length
+      event << "```"
   end
 end
 #Time to reset
@@ -349,6 +351,7 @@ end
 #kill the bot
 bot.command(:kill, description: "kills felyne", permission_level: 800) do |event|
   puts "Daisy... daisy, give me your answer do..."
+  bot.send_message(event.message.channel, "Daisy... daisy, give me your answer do...")
   bot.stop
   exit
 end
